@@ -113,6 +113,10 @@ namespace Movement
          */
         void SetFly();
 
+        /* Enables swimming. Disabled by default
+         */
+        void SetSwim();
+
         /* Enables walk mode. Disabled by default
          */
         void SetWalk(bool enable);
@@ -162,6 +166,7 @@ namespace Movement
     };
 
     inline void MoveSplineInit::SetFly() { args.flags.EnableFlying(); }
+    inline void MoveSplineInit::SetSwim() { args.flags.EnableSwimming(); }
     inline void MoveSplineInit::SetWalk(bool enable) { args.walk = enable; }
     inline void MoveSplineInit::SetSmooth() { args.flags.EnableCatmullRom(); }
     inline void MoveSplineInit::SetUncompressed() { args.flags.uncompressedPath = true; }

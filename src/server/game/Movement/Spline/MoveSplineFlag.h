@@ -98,6 +98,7 @@ namespace Movement
         void EnableAnimation(uint8 anim) { raw() = (raw() & ~(Mask_Animations | Falling | Parabolic | FallingSlow | FadeObject)) | Animation | (anim & Mask_Animations); }
         void EnableParabolic() { raw() = (raw() & ~(Mask_Animations | Falling | Animation | FallingSlow | FadeObject)) | Parabolic; }
         void EnableFlying() { raw() = (raw() & ~(Falling)) | Flying; }
+        void EnableSwimming() { raw() = (raw() & ~(Flying)) | CanSwim; }
         void EnableFalling() { raw() = (raw() & ~(Mask_Animations | Parabolic | Animation | Flying)) | Falling; }
         void EnableCatmullRom() { raw() = (raw() & ~SmoothGroundPath) | Catmullrom; }
         void EnableTransportEnter() { raw() = (raw() & ~TransportExit) | TransportEnter; }
