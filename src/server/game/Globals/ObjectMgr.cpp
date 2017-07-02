@@ -2057,6 +2057,115 @@ void ObjectMgr::LoadCreatures()
     TC_LOG_INFO("server.loading", ">> Loaded " SZFMTD " creatures in %u ms", _creatureDataStore.size(), GetMSTimeDiffToNow(oldMSTime));
 }
 
+void ObjectMgr::LoadCreatureMovement()
+{
+    uint32 oldMSTime = getMSTime();
+
+    //                                               0     1           2         3
+    QueryResult result = WorldDatabase.Query("SELECT GUID, MovementID, SplineID, SplineFlags FROM creature_movement ORDER BY GUID, MovementID ASC");
+
+    if (!result)
+    {
+        TC_LOG_ERROR("server.loading", ">> Loaded 0 creature movements. DB table `creature_movement` is empty.");
+        return;
+    }
+
+    _creatureMovementDataStore.rehash(result->GetRowCount());
+
+    do
+    {
+        Field* fields = result->Fetch();
+
+        CreatureMovement movement;
+
+        ObjectGuid::LowType GUID = fields[0].GetUInt64();
+        movement.MovementID = fields[1].GetUInt32();
+        movement.SplineID = fields[2].GetUInt32();
+        movement.SplineFlags = fields[3].GetUInt32();
+
+        if (!GetCreatureMovementSpline(movement.SplineID))
+        {
+            TC_LOG_ERROR("sql.sql", "Table `creature_movement` has movement (GUID: " UI64FMTD " MovementID: %u) with SplineID %u not found in table `creature_movement_spline`, skipping.", GUID, movement.MovementID, movement.SplineID);
+            continue;
+        }
+
+        _creatureMovementDataStore[GUID].push_back(movement);
+
+    } while (result->NextRow());
+
+    TC_LOG_INFO("server.loading", ">> Loaded " SZFMTD " creature movements in %u ms", _creatureMovementDataStore.size(), GetMSTimeDiffToNow(oldMSTime));
+}
+
+void ObjectMgr::LoadCreatureMovementSpline()
+{
+    uint32 oldMSTime = getMSTime();
+
+    //                                               0   1        2        3     4     5     6            7
+    QueryResult result = WorldDatabase.Query("SELECT ID, PointID, ChainID, PosX, PosY, PosZ, Orientation, Delay FROM creature_movement_spline ORDER BY ID, PointID");
+
+    if (!result)
+    {
+        TC_LOG_ERROR("server.loading", ">> Loaded 0 creature movement splines. DB table `creature_movement_spline` is empty.");
+        return;
+    }
+
+    _creatureMovementSplineDataStore.rehash(result->GetRowCount());
+
+    do
+    {
+        Field* fields = result->Fetch();
+
+        CreatureMovementSplinePoint point;
+
+        uint32 SplineID = fields[0].GetUInt32();
+        point.PointID = fields[1].GetUInt32();
+        point.ChainID = fields[2].GetUInt32();
+        point.PosX = fields[3].GetFloat();
+        point.PosY = fields[4].GetFloat();
+        point.PosZ = fields[5].GetFloat();
+        point.Orientation = fields[6].GetFloat();
+        point.Delay = fields[7].GetUInt32();
+
+        if (std::abs(point.Orientation) > 2 * float(M_PI))
+        {
+            TC_LOG_ERROR("sql.sql", "Table `creature_movement_spline` has spline (ID: %u, PointID: %u) with abs(`Orientation`) > 2*PI (orientation is expressed in radians), normalized.", SplineID, point.PointID);
+            point.Orientation = Position::NormalizeOrientation(point.Orientation);
+        }
+
+        _creatureMovementSplineDataStore[SplineID].push_back(point);
+
+    } while (result->NextRow());
+
+    TC_LOG_INFO("server.loading", ">> Loaded " SZFMTD " creature movement splines in %u ms", _creatureMovementSplineDataStore.size(), GetMSTimeDiffToNow(oldMSTime));
+}
+
+CreatureMovementSpline const* ObjectMgr::GetCreatureMovementSpline(uint32 SplineID) const
+{
+    CreatureMovementSplineContainer::const_iterator itr = _creatureMovementSplineDataStore.find(SplineID);
+    if (itr == _creatureMovementSplineDataStore.end())
+        return nullptr;
+
+    if (itr->second.empty())
+        return nullptr;
+
+    return &itr->second;
+}
+
+CreatureMovement const* ObjectMgr::GetCreatureMovement(ObjectGuid::LowType GUID, uint32 MovementID) const
+{
+    CreatureMovementContainer::const_iterator itr = _creatureMovementDataStore.find(GUID);
+    if (itr == _creatureMovementDataStore.end())
+        return nullptr;
+
+    if (itr->second.empty())
+        return nullptr;
+
+    if ((itr->second.size() - 1) > MovementID)
+        return &itr->second.at(MovementID);
+
+    return nullptr;
+}
+
 void ObjectMgr::AddCreatureToGrid(ObjectGuid::LowType guid, CreatureData const* data)
 {
     uint32 mask = data->spawnMask;

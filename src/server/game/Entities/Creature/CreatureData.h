@@ -554,6 +554,28 @@ struct CreatureAddon
     std::vector<uint32> auras;
 };
 
+// `creature_movement` table
+struct CreatureMovement
+{
+    uint32 MovementID;
+    uint32 SplineID;
+    uint32 SplineFlags;
+};
+
+// `creature_movement_spline` table
+struct CreatureMovementSplinePoint
+{
+    uint32 PointID;
+    uint32 ChainID;
+    float PosX;
+    float PosY;
+    float PosZ;
+    float Orientation;
+    uint32 Delay;
+};
+
+typedef std::vector<CreatureMovementSplinePoint> CreatureMovementSpline;
+
 // Vendors
 struct VendorItem
 {

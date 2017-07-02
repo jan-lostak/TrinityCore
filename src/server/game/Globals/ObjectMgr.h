@@ -480,6 +480,8 @@ typedef std::unordered_map<uint32, CreatureTemplate> CreatureTemplateContainer;
 typedef std::unordered_map<uint32, CreatureAddon> CreatureTemplateAddonContainer;
 typedef std::unordered_map<ObjectGuid::LowType, CreatureData> CreatureDataContainer;
 typedef std::unordered_map<ObjectGuid::LowType, CreatureAddon> CreatureAddonContainer;
+typedef std::unordered_map<ObjectGuid::LowType, std::vector<CreatureMovement>> CreatureMovementContainer;
+typedef std::unordered_map<uint32, std::vector<CreatureMovementSplinePoint>> CreatureMovementSplineContainer;
 typedef std::unordered_map<uint16, CreatureBaseStats> CreatureBaseStatsContainer;
 typedef std::unordered_map<uint8, EquipmentInfo> EquipmentInfoContainerInternal;
 typedef std::unordered_map<uint32, EquipmentInfoContainerInternal> EquipmentInfoContainer;
@@ -885,6 +887,9 @@ class TC_GAME_API ObjectMgr
         ItemTemplate const* GetItemTemplate(uint32 entry) const;
         ItemTemplateContainer const* GetItemTemplateStore() const { return &_itemTemplateStore; }
 
+        CreatureMovementSpline const* GetCreatureMovementSpline(uint32 SplineID) const;
+        CreatureMovement const * GetCreatureMovement(ObjectGuid::LowType GUID, uint32 MovementID) const;
+
         InstanceTemplate const* GetInstanceTemplate(uint32 mapId) const;
 
         PetLevelInfo const* GetPetLevelInfo(uint32 creature_id, uint8 level) const;
@@ -1103,6 +1108,8 @@ class TC_GAME_API ObjectMgr
         void LoadCreatureQuestItems();
         void LoadTempSummons();
         void LoadCreatures();
+        void LoadCreatureMovement();
+        void LoadCreatureMovementSpline();
         void LoadLinkedRespawn();
         bool SetCreatureLinkedRespawn(ObjectGuid::LowType guid, ObjectGuid::LowType linkedGuid);
         void LoadCreatureAddons();
@@ -1635,6 +1642,8 @@ class TC_GAME_API ObjectMgr
 
         MapObjectGuids _mapObjectGuidsStore;
         CreatureDataContainer _creatureDataStore;
+        CreatureMovementContainer _creatureMovementDataStore;
+        CreatureMovementSplineContainer _creatureMovementSplineDataStore;
         CreatureTemplateContainer _creatureTemplateStore;
         CreatureModelContainer _creatureModelStore;
         CreatureAddonContainer _creatureAddonStore;
